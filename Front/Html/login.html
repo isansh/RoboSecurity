@@ -1,0 +1,37 @@
+﻿<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="../Css/style.css">
+</head>
+<body>
+    <header><a href="index.html" class="logo">RoboSecurity</a></header>
+    <div class="main-content">
+        <div class="form-container">
+            <h2>Вхід</h2>
+            <input type="email" id="email" placeholder="Ваша пошта">
+            <input type="password" id="password" placeholder="Пароль">
+            <button class="primary-btn" onclick="handleLogin()">Увійти</button>
+        </div>
+    </div>
+    <script>
+        async function handleLogin() {
+            const loginData = {
+                userMail: document.getElementById('email').value,
+                userPassword: document.getElementById('password').value
+            };
+            const response = await fetch('https://localhost:7193/Login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(loginData)
+            });
+            if (response.ok) {
+                const result = await response.json();
+                localStorage.setItem('token', result.token);
+                localStorage.setItem('role', result.userRole);
+                location.href = result.userRole === "admin" ? 'admin.html' : 'robot-selection.html';
+            } else { alert("Помилка входу"); }
+        }
+    </script>
+</body>
+</html>
