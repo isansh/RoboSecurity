@@ -16,12 +16,5 @@ namespace RoboSecurity.Models
 
         [Column("user_password")]
         public string UserPassword { get; set; }
-
-        [Column("user_role_id")]
-        public int UserRoleId { get; set; }
-
-        [JsonIgnore]
-        [ForeignKey ("UserRoleId")]
-        public RolesModel Roles { get; set; }
     }
 }

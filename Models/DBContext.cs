@@ -14,5 +14,9 @@ namespace RoboSecurity.Models
         public DbSet<RolesModel> Role { get; set; }
 
         public DbSet<RobotsModel> Robot { get; set; }
+
+        public DbSet<UserRolesModel> UserRole {  get; set; }
+
+        public DbSet<AlarmModel> Alarm { get; set; }
     }
 }
