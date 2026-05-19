@@ -25,7 +25,7 @@ namespace RoboSecurity.Services
                     UserId = user.UserId,
                     UserMail = user.UserMail,
                     UserPassword = user.UserPassword,
-                    UserRoleName = user.Roles.RoleName,
+                    UserRoles = user.UserRoles.Select(ur => ur.Role.RoleName).ToList(),
                 })
                 .ToList();
         }
@@ -33,7 +33,7 @@ namespace RoboSecurity.Services
         public UserResponse? GetByMail(string mail)
         {
             var user = dbContext.User
-                .Include(u => u.Roles)
+                .Include(u => u.UserRoles)
                 .FirstOrDefault(u => u.UserMail == mail);
 
             if (user == null)
@@ -46,18 +46,23 @@ namespace RoboSecurity.Services
                 UserId = user.UserId,
                 UserMail = user.UserMail,
                 UserPassword = user.UserPassword,
-                UserRoleName = user.Roles.RoleName,
+                UserRoles = user.UserRoles.Select(ur => ur.Role.RoleName).ToList(),
             };
         }
 
-        public bool PostNew(string mail, string password, string confirmPassword, string role)
+        public bool PostNew(string mail, string password, string confirmPassword, List<string> roles)
         {
-            var roleId = dbContext.Role
-                .Where(r => r.RoleName == role)
-                .Select(r => r.RoleId)
-                .FirstOrDefault();
+            if (roles == null || !roles.Any())
+            {
+                return false;
+            }
 
-            if (roleId == 0)
+            var roleIds = dbContext.Role
+                          .Where(r => roles.Contains(r.RoleName))
+                          .Select(r => r.RoleId)
+                          .ToList();
+
+            if (roleIds.Count != roles.Count)
             {
                 return false;
             }
@@ -88,12 +93,22 @@ namespace RoboSecurity.Services
                 return false;
             }
 
-            dbContext.User.Add(new UsersModel
+            var newUser = new UsersModel
             {
                 UserMail = mail,
-                UserPassword = hashPassword,
-                UserRoleId = roleId,
-            });
+                UserPassword = hashPassword
+            };
+
+            dbContext.User.Add(newUser);
+
+            foreach (var rId in roleIds)
+            {
+                dbContext.UserRoles.Add(new UserRolesModel
+                {
+                    UserId = newUser.UserId,
+                    RoleId = rId
+                });
+            }
 
             dbContext.SaveChanges();
 
@@ -118,14 +133,26 @@ namespace RoboSecurity.Services
 
         public bool EditUserDetails(ChangeUserRequest change)
         {
-            var user = dbContext.User.Find(change.UserId);
+            var user = dbContext.User
+                      .Include(u => u.UserRoles)
+                      .FirstOrDefault(u => u.UserId == change.UserId);
 
             if (user == null)
             {
                 return false;
             }
 
-            if (!dbContext.Role.Any(r => r.RoleId == change.UserRoleId))
+            if (change.UserRoles == null || !change.UserRoles.Any())
+            {
+                return false;
+            }
+
+            var newRoleIds = dbContext.Role
+                             .Where(r => change.UserRoles.Contains(r.RoleName))
+                             .Select(r => r.RoleId)
+                             .ToList();
+
+            if (newRoleIds.Count != change.UserRoles.Count)
             {
                 return false;
             }
@@ -153,7 +180,17 @@ namespace RoboSecurity.Services
 
             user.UserMail = change.UserMail;
             user.UserPassword = hashPassword;
-            user.UserRoleId = change.UserRoleId;
+
+            dbContext.UserRoles.RemoveRange(user.UserRoles);
+
+            foreach (var rId in newRoleIds)
+            {
+                dbContext.UserRoles.Add(new UserRolesModel
+                {
+                    UserId = user.UserId,
+                    RoleId = rId
+                });
+            }
 
             dbContext.SaveChanges();
 

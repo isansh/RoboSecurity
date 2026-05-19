@@ -10,6 +10,6 @@ namespace RoboSecurity.DTOs
 
         public string UserPassword { get; set; }
 
-        public string UserRoleName { get; set; }
+        public List<string> UserRoles { get; set; }
     }
 }

@@ -16,5 +16,7 @@ namespace RoboSecurity.Models
 
         [Column("user_password")]
         public string UserPassword { get; set; }
+
+        public virtual ICollection<UserRolesModel> UserRoles { get; set; } = new List<UserRolesModel>();
     }
 }

@@ -6,7 +6,7 @@
 
         public string UserMail { get; set; }
 
-        public int UserRoleId { get; set; }
+        public List<string> UserRoles { get; set; }
 
         public string Password { get; set; }
 

@@ -4,7 +4,7 @@
     {
         public string UserMail { get; set; }
 
-        public string UserRoleName { get; set; }
+        public List<string> UserRoles { get; set; }
 
         public string Password { get; set; }
 
