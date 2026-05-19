@@ -45,7 +45,7 @@ namespace RoboSecurity.Controllers
             return Ok(new
             {
                 Token = token,
-                UserRole = user.UserRoleName,
+                UserRoles = user.UserRoles
             });
         }
 
@@ -54,12 +54,19 @@ namespace RoboSecurity.Controllers
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config["Jwt:Key"]));
             var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 
-            var claims = new[]
+            var claims = new List<Claim>
             {
             new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
             new Claim(ClaimTypes.Email, user.UserMail),
-            new Claim(ClaimTypes.Role, user.UserRoleName)
-        };
+            };
+
+            if (user.UserRoles != null)
+            {
+                foreach (var role in user.UserRoles)
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, role));
+                }
+            }
 
             var token = new JwtSecurityToken(
                 issuer: config["Jwt:Issuer"],

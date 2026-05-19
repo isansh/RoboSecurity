@@ -34,6 +34,7 @@ namespace RoboSecurity.Services
         {
             var user = dbContext.User
                 .Include(u => u.UserRoles)
+                .ThenInclude(ur => ur.Role)
                 .FirstOrDefault(u => u.UserMail == mail);
 
             if (user == null)

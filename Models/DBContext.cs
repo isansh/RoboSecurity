@@ -18,5 +18,13 @@ namespace RoboSecurity.Models
         public DbSet<UserRolesModel> UserRoles {  get; set; }
 
         public DbSet<AlarmModel> Alarm { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<UserRolesModel>()
+                .HasKey(ur => new { ur.UserId, ur.RoleId });
+        }
     }
 }
