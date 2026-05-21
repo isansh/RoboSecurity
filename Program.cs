@@ -28,6 +28,7 @@ namespace RoboSecurity
             builder.Services.AddControllers();
             builder.Services.AddScoped<IUsersService, UsersService>();
             builder.Services.AddScoped<IRobotsService, RobotsService>();
+            builder.Services.AddScoped<IAlarmsService, AlarmsService>();
 
             builder.Services.AddAuthentication(options =>
             {

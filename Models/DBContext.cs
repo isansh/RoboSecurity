@@ -17,7 +17,7 @@ namespace RoboSecurity.Models
 
         public DbSet<UserRolesModel> UserRoles {  get; set; }
 
-        public DbSet<AlarmModel> Alarm { get; set; }
+        public DbSet<AlarmModel> Alarms { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

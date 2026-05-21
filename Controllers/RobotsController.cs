@@ -8,6 +8,7 @@ namespace RoboSecurity.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [Authorize]
     public class RobotsController : Controller
     {
         private readonly IRobotsService robotService;

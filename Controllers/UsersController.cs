@@ -9,6 +9,7 @@ namespace RoboSecurity.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [Authorize]
     public class UsersController : ControllerBase
     {
         private readonly IUsersService userService;
@@ -25,7 +26,7 @@ namespace RoboSecurity.Controllers
             var users = userService.GetAll();
 
             if (users is null)
-                return NotFound();
+                return NotFound("Користувачів не знайдено");
 
             return Ok(users);
         }
@@ -37,7 +38,7 @@ namespace RoboSecurity.Controllers
             var user = userService.GetByMail(mail);
 
             if (user == null)
-                return NotFound();
+                return NotFound("Користувача не знайдено за мейлом");
 
             return Ok(user);
         }
@@ -49,7 +50,7 @@ namespace RoboSecurity.Controllers
             bool user = userService.PostNew(request.UserMail, request.Password, request.ConfirmPassword, request.UserRoles);
 
             if (!user)
-                return NotFound();
+                return NotFound("Не вдалося додати користувача");
 
             return Ok();
         }
@@ -61,7 +62,7 @@ namespace RoboSecurity.Controllers
             var user = userService.DeleteById(id);
 
             if (!user)
-                return NotFound();
+                return NotFound("Користувача не знайдено за цим айді");
 
             return Ok();
         }
@@ -74,7 +75,7 @@ namespace RoboSecurity.Controllers
 
             if (!result)
             {
-                return NotFound();
+                return NotFound("Не вдалося змінити користувача");
             }
 
             return Ok();
