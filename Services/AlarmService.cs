@@ -24,7 +24,9 @@ namespace RoboSecurity.Services
                     RoboName = dbContext.Robot.FirstOrDefault(r => r.RoboId == a.RoboId)!.RoboName ?? "Невідомий робот",
                     Timestamp = a.Timestamp,
                     Message = a.Message,
-                    IsResolved = a.IsResolved
+                    IsResolved = a.IsResolved,
+                    UserEmail = dbContext.Robot.FirstOrDefault(r => r.RoboId == a.RoboId)!.User.UserMail ?? "Не вказано",
+                    UserPhone = dbContext.Robot.FirstOrDefault(r => r.RoboId == a.RoboId)!.User.PhoneNumber ?? ""
                 })
                 .ToList();
         }
@@ -41,7 +43,9 @@ namespace RoboSecurity.Services
                     RoboName = dbContext.Robot.FirstOrDefault(r => r.RoboId == a.RoboId)!.RoboName ?? "Невідомий робот",
                     Timestamp = a.Timestamp,
                     Message = a.Message,
-                    IsResolved = a.IsResolved
+                    IsResolved = a.IsResolved,
+                    UserEmail = dbContext.Robot.FirstOrDefault(r => r.RoboId == a.RoboId)!.User.UserMail ?? "Не вказано",
+                    UserPhone = dbContext.Robot.FirstOrDefault(r => r.RoboId == a.RoboId)!.User.PhoneNumber ?? ""
                 })
                 .ToList();
         }
@@ -98,7 +102,9 @@ namespace RoboSecurity.Services
                     RoboName = dbContext.Robot.FirstOrDefault(r => r.RoboId == a.RoboId)!.RoboName ?? "Невідомий робот",
                     Timestamp = a.Timestamp,
                     Message = a.Message,
-                    IsResolved = a.IsResolved
+                    IsResolved = a.IsResolved,
+                    UserEmail = dbContext.Robot.FirstOrDefault(r => r.RoboId == a.RoboId)!.User.UserMail ?? "Не вказано",
+                    UserPhone = dbContext.Robot.FirstOrDefault(r => r.RoboId == a.RoboId)!.User.PhoneNumber ?? ""
                 })
                 .ToList();
         }

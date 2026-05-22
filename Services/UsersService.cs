@@ -24,6 +24,7 @@ namespace RoboSecurity.Services
                 {
                     UserId = user.UserId,
                     UserMail = user.UserMail,
+                    PhoneNumber = user.PhoneNumber,
                     UserPassword = user.UserPassword,
                     UserRoles = user.UserRoles.Select(ur => ur.Role.RoleName).ToList(),
                 })
@@ -46,48 +47,50 @@ namespace RoboSecurity.Services
             {
                 UserId = user.UserId,
                 UserMail = user.UserMail,
+                PhoneNumber = user.PhoneNumber,
                 UserPassword = user.UserPassword,
                 UserRoles = user.UserRoles.Select(ur => ur.Role.RoleName).ToList(),
             };
         }
 
-        public bool PostNew(string mail, string password, string confirmPassword, List<string> roles)
+        public bool PostNew(CreateUserRequest create)
         {
-            if (roles == null || !roles.Any())
+            if (create.UserRoles == null || !create.UserRoles.Any())
             {
                 return false;
             }
 
             var roleIds = dbContext.Role
-                          .Where(r => roles.Contains(r.RoleName))
+                          .Where(r => create.UserRoles.Contains(r.RoleName))
                           .Select(r => r.RoleId)
                           .ToList();
 
-            if (roleIds.Count != roles.Count)
+            if (roleIds.Count != create.UserRoles.Count)
             {
                 return false;
             }
 
-            if (!VerifyingRequestHelper.VerifyQuery(mail) || 
-                !VerifyingRequestHelper.VerifyQuery(password) || 
-                !VerifyingRequestHelper.VerifyQuery(confirmPassword))
+            if (!VerifyingRequestHelper.VerifyQuery(create.UserMail) ||
+                !VerifyingRequestHelper.VerifyQuery(create.PhoneNumber) ||
+                !VerifyingRequestHelper.VerifyQuery(create.Password) || 
+                !VerifyingRequestHelper.VerifyQuery(create.ConfirmPassword))
             {
                 return false;
             }
 
-            var exists = dbContext.User.Any(u => u.UserMail == mail);
+            var exists = dbContext.User.Any(u => u.UserMail == create.UserMail);
 
             if (exists)
             {
                 return false;
             }
 
-            if (password != confirmPassword)
+            if (create.Password != create.ConfirmPassword)
             {
                 return false;
             }
 
-            var hashPassword = HashCodeHelper.HashPassword(password);
+            var hashPassword = HashCodeHelper.HashPassword(create.Password);
 
             if (!VerifyingRequestHelper.VerifyQuery(hashPassword))
             {
@@ -96,7 +99,8 @@ namespace RoboSecurity.Services
 
             var newUser = new UsersModel
             {
-                UserMail = mail,
+                UserMail = create.UserMail,
+                PhoneNumber = create.Password,
                 UserPassword = hashPassword
             };
 
@@ -160,6 +164,7 @@ namespace RoboSecurity.Services
             }
 
             if (!VerifyingRequestHelper.VerifyQuery(change.UserMail) ||
+                !VerifyingRequestHelper.VerifyQuery(change.PhoneNumber) ||
                 !VerifyingRequestHelper.VerifyQuery(change.Password) ||
                 !VerifyingRequestHelper.VerifyQuery(change.ConfirmPassword))
             {
@@ -181,6 +186,7 @@ namespace RoboSecurity.Services
             var hashPassword = HashCodeHelper.HashPassword(change.Password);
 
             user.UserMail = change.UserMail;
+            user.PhoneNumber = change.PhoneNumber;
             user.UserPassword = hashPassword;
 
             dbContext.UserRoles.RemoveRange(user.UserRoles);

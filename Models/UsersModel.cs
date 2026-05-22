@@ -14,6 +14,9 @@ namespace RoboSecurity.Models
         [Column("user_mail")]
         public string UserMail { get; set; }
 
+        [Column("phone_number")]
+        public string PhoneNumber { get; set; }
+
         [Column("user_password")]
         public string UserPassword { get; set; }
 

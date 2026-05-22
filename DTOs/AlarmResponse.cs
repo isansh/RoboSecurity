@@ -8,5 +8,8 @@
         public DateTime Timestamp { get; set; }
         public string Message { get; set; }
         public bool IsResolved { get; set; }
+
+        public string UserEmail { get; set; } = null!;
+        public string UserPhone { get; set; } = null!;
     }
 }
