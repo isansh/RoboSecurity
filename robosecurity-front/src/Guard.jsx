@@ -8,7 +8,7 @@ function Guard() {
     const apiBase = 'https://localhost:7193/Alarms';
 
     const [alarms, setAlarms] = useState([]);
-    const [viewMode, setViewMode] = useState('active'); // 'active', 'all', 'search'
+    const [viewMode, setViewMode] = useState('active');
     const [isLoading, setIsLoading] = useState(true);
 
     const [dateFrom, setDateFrom] = useState('');
@@ -18,7 +18,6 @@ function Guard() {
         if (!token) {
             navigate('/login');
         } else {
-            // Якщо ми не в режимі пошуку, то оновлюємо список при зміні вкладки
             if (viewMode !== 'search') {
                 fetchAlarms();
             }
@@ -51,7 +50,6 @@ function Guard() {
             });
             if (response.ok) {
                 alert("Тривогу успішно закрито");
-                // Перевантажуємо поточний режим
                 if (viewMode === 'search') {
                     handleSearchByDate();
                 } else {
@@ -70,8 +68,6 @@ function Guard() {
 
         setIsLoading(true);
         try {
-            // Відправляємо чистий локальний рядок YYYY-MM-DDTHH:mm, 
-            // оскільки .toISOString() конвертує в UTC і ламає години для .NET
             const response = await fetch(`${apiBase}/search?from=${dateFrom}&to=${dateTo}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -79,7 +75,7 @@ function Guard() {
             if (response.ok) {
                 const data = await response.json();
                 setAlarms(data);
-                setViewMode('search'); // Перемикаємо в режим результатів пошуку
+                setViewMode('search');
             }
         } catch (error) {
             console.error("Помилка пошуку:", error);
@@ -99,7 +95,6 @@ function Guard() {
             <h1 id="pageTitle">🚨 Пульт моніторингу безпеки</h1>
 
             <div id="search-section">
-                {/* Кнопки перемикання тепер мають фіксований клас і змінюють лише колір завдяки .active */}
                 <button
                     className={`filter-toggle-btn ${viewMode === 'active' ? 'active' : ''}`}
                     onClick={() => setViewMode('active')}

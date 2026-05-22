@@ -62,8 +62,8 @@ function Header() {
                             <button className="btn-light-blue" onClick={() => navigate('/admin')}>Усі користувачі</button>
                         )}
 
-                        {isGuard && (
-                            <button className="btn-light-blue" style={{ backgroundColor: '#e2f0d9', color: '#385723' }} onClick={() => navigate('/guard')}>
+                        {isGuard || isAdmin && (
+                            <button className="btn-light-blue" onClick={() => navigate('/guard')}>
                                 🚨 Сповіщення
                             </button>
                         )}
