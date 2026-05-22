@@ -101,6 +101,7 @@ namespace RoboSecurity.Services
             };
 
             dbContext.User.Add(newUser);
+            dbContext.SaveChanges();
 
             foreach (var rId in roleIds)
             {
