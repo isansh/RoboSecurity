@@ -15,19 +15,20 @@ namespace RoboSecurity.Models
         public string RoboName { get; set; }
 
         [Column("user_id")]
-        public int UserId { get; set; }
+        public int? UserId { get; set; }
 
         [JsonIgnore]
         [ForeignKey("UserId")]
-        public UsersModel User { get; set; }
+        public UsersModel? User { get; set; }
 
-        [Column("stream_url")]
-        public string StreamUrl { get; set; }
+        [Required]
+        [Column("secret_token")]
+        public string SecretToken { get; set; }
 
         [Column("status")]
         public string Status { get; set; }
 
-        [Column("robo_ip_adress")]
-        public string RoboIpAdress { get; set; }
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }
