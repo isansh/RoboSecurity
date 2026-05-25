@@ -161,19 +161,14 @@ namespace RoboSecurity.Services
 
         public bool ActivateRobot(RobotActivationDto request)
         {
-            if (request == null || request.RobotId < 0 || string.IsNullOrEmpty(request.SecretToken))
+            if (request == null || string.IsNullOrEmpty(request.SecretToken))
             {
                 return false;
             }
 
-            var robot = dbContext.Robot.FirstOrDefault(r => r.RoboId == request.RobotId);
+            var robot = dbContext.Robot.FirstOrDefault(r => r.SecretToken == request.SecretToken);
 
             if (robot == null)
-            {
-                return false;
-            }
-
-            if (robot.SecretToken != request.SecretToken)
             {
                 return false;
             }
@@ -181,7 +176,6 @@ namespace RoboSecurity.Services
             robot.Status = "active";
 
             dbContext.SaveChanges();
-
             return true;
         }
     }
