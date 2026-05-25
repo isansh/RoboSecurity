@@ -37,7 +37,7 @@ function Register() {
                     onChange={(e) => setEmail(e.target.value)}
                 />
                 <input
-                    type="phoneNumber"
+                    type="tel"
                     placeholder="Ваш номер телефона"
                     value={phone}
                     onChange={(e) => setPhoneNumber(e.target.value)}

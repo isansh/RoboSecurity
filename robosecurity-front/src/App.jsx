@@ -6,6 +6,7 @@ import Register from './Register';
 import Admin from './Admin';
 import Robots from './Robots';
 import Guard from './Guard';
+import RobotControl from './RobotControl';
 import './App.css';
 
 function App() {
@@ -21,6 +22,7 @@ function App() {
                     <Route path="/admin" element={<Admin />} />
                     <Route path="/robots" element={<Robots />} />
                     <Route path="/guard" element={<Guard />} />
+                    <Route path="/control" element={<RobotControl />} />
                 </Routes>
             </div>
         </Router>

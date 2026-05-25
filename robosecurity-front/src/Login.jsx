@@ -23,12 +23,12 @@ function Login() {
                 const result = await response.json();
 
                 localStorage.setItem('token', result.token);
-                localStorage.setItem('role', result.userRole);
+                localStorage.setItem('roles', JSON.stringify(result.userRoles));
 
                 if (result.userRoles.includes('admin')) {
                     navigate('/admin');
                 } else if (result.userRoles.includes('guard')) {
-                    navigate('/quard');
+                    navigate('/guard');
                 } else {
                     navigate('/robots');
                 }

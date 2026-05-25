@@ -16,8 +16,6 @@ function Robots() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [addName, setAddName] = useState('');
-    const [addIp, setAddIp] = useState('');
-    const [addStream, setAddStream] = useState('');
 
     function getUserIdFromToken(tokenStr) {
         if (!tokenStr) return null;
@@ -78,17 +76,16 @@ function Robots() {
     }
 
     async function handleAddRobot() {
-        if (!addName || !addIp) {
-            alert("Заповніть основні поля!");
+        if (!addName) {
+            alert("Будь ласка, введіть назву робота!");
             return;
         }
 
         const newData = {
             roboName: addName,
-            roboIpAdress: addIp,
-            status: "new",
-            streamUrl: addStream,
-            userId: parseInt(currentUserId)
+            status: "pending_activation",
+            userId: currentUserId,
+            secretToken: ""
         };
 
         try {
@@ -105,14 +102,14 @@ function Robots() {
                 alert("Робота успішно додано!");
                 setIsModalOpen(false);
                 setAddName('');
-                setAddIp('');
-                setAddStream('');
                 loadRobots();
             } else {
-                alert("Помилка при збереженні.");
+                const errorText = await response.text();
+                alert(`Сервер відхилив запит: ${errorText || response.statusText}`);
             }
-        } catch {
-            alert("Помилка мережі при додаванні.");
+        } catch (error) {
+            console.error("Помилка мережі:", error);
+            alert("Не вдалося зв'язатися з сервером.");
         }
     }
 
@@ -123,7 +120,7 @@ function Robots() {
     }
 
     const filteredRobots = allRobots.filter(r =>
-        r.roboName.toLowerCase().includes(searchQuery.toLowerCase())
+        r.roboName && r.roboName.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     return (
@@ -147,17 +144,16 @@ function Robots() {
 
             <div className="robot-grid">
                 {isLoading ? (
-                    <p>Завантаження роботів...</p>
+                    <p className="welcome-guest-text">Завантаження роботів...</p>
                 ) : errorMsg ? (
-                    <p>{errorMsg}</p>
+                    <p style={{ color: 'red' }}>{errorMsg}</p>
                 ) : filteredRobots.length === 0 ? (
-                    <p>Роботів не знайдено.</p>
+                    <p className="welcome-guest-text">Роботів не знайдено.</p>
                 ) : (
                     filteredRobots.map(robot => (
                         <div className="robot-card" key={robot.roboId}>
                             <h3>🤖 {robot.roboName}</h3>
-                            <p>Статус: <b>{robot.status || 'new'}</b></p>
-                            <p>IP: {robot.roboIpAdress || '---'}</p>
+                            <p>Статус: <span className="welcome-user-text">{robot.status || 'new'}</span></p>
                             <button className="btn-go" onClick={() => startControl(robot.roboId)}>
                                 Керувати
                             </button>
@@ -172,18 +168,19 @@ function Robots() {
                         <h3>Додати нового робота</h3>
 
                         <label>Назва:</label>
-                        <input type="text" placeholder="Наприклад: Naruto" value={addName} onChange={(e) => setAddName(e.target.value)} />
+                        <input
+                            type="text"
+                            placeholder="Наприклад: Naruto"
+                            value={addName}
+                            onChange={(e) => setAddName(e.target.value)}
+                        />
 
-                        <label>IP Адреса:</label>
-                        <input type="text" placeholder="192.168.0.100" value={addIp} onChange={(e) => setAddIp(e.target.value)} />
-
-                        <label>URL Стріму:</label>
-                        <input type="text" placeholder="http://..." value={addStream} onChange={(e) => setAddStream(e.target.value)} />
-
-                        <button className="primary-btn" onClick={handleAddRobot}>Створити</button>
-                        <button className="btn-secondary" onClick={() => setIsModalOpen(false)}>
-                            Скасувати
-                        </button>
+                        <div style={{ marginTop: '15px', display: 'flex', gap: '10px' }}>
+                            <button className="primary-btn" onClick={handleAddRobot}>Створити</button>
+                            <button className="btn-secondary" onClick={() => setIsModalOpen(false)}>
+                                Скасувати
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
