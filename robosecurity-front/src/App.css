@@ -442,3 +442,66 @@ th {
         background-color: #b0e0e6;
         color: #4682b4;
     }
+
+/* Модифікації для пошукової секції та кнопки створення */
+.search-input {
+    margin: 0 !important;
+    width: 300px !important;
+}
+
+.btn-auto-width {
+    width: auto !important;
+    margin: 0 !important;
+}
+
+.btn-create-user {
+    width: auto !important;
+    margin: 0 0 0 auto !important;
+    padding: 12px 20px !important;
+    border-radius: 8px !important;
+}
+
+/* Дозволяємо підкладці модалки скролитись, якщо вікно не вміщається */
+.modal-scrollable {
+    overflow-y: auto !important;
+}
+
+/* Налаштування самого контенту модалки для прокрутки */
+.modal-content-scrollable {
+    margin: 5% auto !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+}
+
+/* Заголовки розділів всередині модального вікна */
+.modal-section-label {
+    display: block !important;
+    margin: 15px 0 5px !important;
+    font-weight: bold !important;
+    text-align: left !important;
+}
+
+/* Контейнер для списку чекбоксів */
+.modal-checkbox-group {
+    text-align: left !important;
+    margin-left: 5px !important;
+    margin-bottom: 15px !important;
+}
+
+/* Виправлення чекбоксів: ставимо в один рядок з текстом */
+.checkbox-container {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin: 8px 0 !important;
+    cursor: pointer !important;
+    font-size: 16px !important;
+    font-weight: normal !important;
+}
+
+/* Скидаємо width: 100% для маленьких квадратиків */
+.checkbox-input {
+    width: auto !important;
+    margin: 0 !important;
+    transform: scale(1.2) !important;
+}

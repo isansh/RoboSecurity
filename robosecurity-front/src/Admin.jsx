@@ -10,12 +10,22 @@ function Admin() {
     const [users, setUsers] = useState([]);
     const [searchEmail, setSearchEmail] = useState('');
 
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    // Стан для модалки РЕДАГУВАННЯ
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editUserId, setEditUserId] = useState('');
     const [editEmail, setEditEmail] = useState('');
+    const [editPhone, setEditPhone] = useState('');
     const [editPassword, setEditPassword] = useState('');
     const [editConfirmPassword, setEditConfirmPassword] = useState('');
     const [editRoles, setEditRoles] = useState([]);
+
+    // Стан для модалки СТВОРЕННЯ
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [createEmail, setCreateEmail] = useState('');
+    const [createPhone, setCreatePhone] = useState('');
+    const [createPassword, setCreatePassword] = useState('');
+    const [createConfirmPassword, setCreateConfirmPassword] = useState('');
+    const [createRoles, setCreateRoles] = useState(['user']);
 
     useEffect(() => {
         if (!token) {
@@ -54,8 +64,7 @@ function Admin() {
             } else {
                 alert("Користувача не знайдено");
             }
-        } catch
-        {
+        } catch {
             alert("Помилка пошуку");
         }
     }
@@ -70,23 +79,24 @@ function Admin() {
                 if (response.ok) {
                     loadAllUsers();
                 }
-            } catch
-            {
+            } catch {
                 alert("Помилка при видаленні");
             }
         }
     }
 
+    // --- ЛОГІКА РЕДАГУВАННЯ ---
     function openEditModal(user) {
         setEditUserId(user.userId);
         setEditEmail(user.userMail);
+        setEditPhone(user.userPhone || user.phoneNumber || '');
         setEditRoles(user.userRoles || []);
         setEditPassword('');
         setEditConfirmPassword('');
-        setIsModalOpen(true);
+        setIsEditModalOpen(true);
     }
 
-    function handleRoleChange(role) {
+    function handleEditRoleChange(role) {
         if (editRoles.includes(role)) {
             setEditRoles(editRoles.filter(r => r !== role));
         } else {
@@ -98,17 +108,18 @@ function Admin() {
         if (editRoles.length === 0) {
             return alert("Користувач повинен мати хоча б одну роль!");
         }
-
         if (editPassword !== editConfirmPassword) {
             return alert("Паролі не співпадають!");
         }
 
+        // Форматуємо об'єкт під вимоги C# API (Паскаль-кейс для сумісності)
         const data = {
-            userId: parseInt(editUserId),
-            userMail: editEmail,
-            userRoles: editRoles,
-            password: editPassword,
-            confirmPassword: editConfirmPassword
+            UserId: parseInt(editUserId),
+            UserMail: editEmail,
+            PhoneNumber: editPhone,
+            UserRoles: editRoles,
+            Password: editPassword,
+            ConfirmPassword: editConfirmPassword
         };
 
         try {
@@ -122,15 +133,75 @@ function Admin() {
             });
 
             if (response.ok) {
-                alert("Оновлено!");
-                setIsModalOpen(false);
+                alert("Оновлено успішно!");
+                setIsEditModalOpen(false);
                 loadAllUsers();
             } else {
-                alert("Помилка оновлення");
+                alert("Помилка оновлення. Перевірте формат даних.");
             }
-        } catch
-        {
-            alert("Помилка сети при обновлении");
+        } catch {
+            alert("Помилка мережі при оновленні");
+        }
+    }
+
+    // --- ЛОГІКА СТВОРЕННЯ (РЕЄСТРАЦІЇ З АДМІНКИ) ---
+    function openCreateModal() {
+        setCreateEmail('');
+        setCreatePhone('');
+        setCreatePassword('');
+        setCreateConfirmPassword('');
+        setCreateRoles(['user']);
+        setIsCreateModalOpen(true);
+    }
+
+    function handleCreateRoleChange(role) {
+        if (createRoles.includes(role)) {
+            setCreateRoles(createRoles.filter(r => r !== role));
+        } else {
+            setCreateRoles([...createRoles, role]);
+        }
+    }
+
+    async function handleCreateUser() {
+        if (!createEmail || !createPassword) {
+            return alert("Email та Пароль є обов'язковими!");
+        }
+        if (createRoles.length === 0) {
+            return alert("Оберіть хоча б одну роль!");
+        }
+        if (createPassword !== createConfirmPassword) {
+            return alert("Паролі не співпадають!");
+        }
+
+        // Повністю копіюємо структуру успішного об'єкта з Register.jsx
+        const regData = {
+            UserMail: createEmail,
+            PhoneNumber: createPhone,
+            Password: createPassword,
+            ConfirmPassword: createConfirmPassword,
+            UserRoles: createRoles // Передаємо масив вибраних адміном ролей
+        };
+
+        try {
+            // URL виправлено на базовий, як у файлі Register.jsx
+            const response = await fetch(apiBase, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(regData)
+            });
+
+            if (response.ok) {
+                alert("Користувача успішно створено!");
+                setIsCreateModalOpen(false);
+                loadAllUsers();
+            } else {
+                alert("Не вдалося створити користувача. Перевірте дані.");
+            }
+        } catch {
+            alert("Помилка мережі при створенні користувача");
         }
     }
 
@@ -142,19 +213,23 @@ function Admin() {
         <div className="container">
             <h1>Управління користувачами</h1>
 
-            <div id="search-section" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div id="search-section">
                 <input
                     type="text"
                     placeholder="Введіть email для пошуку"
-                    style={{ margin: 0, width: '300px' }}
+                    className="search-input"
                     value={searchEmail}
                     onChange={(e) => setSearchEmail(e.target.value)}
                 />
-                <button className="primary-btn" style={{ width: 'auto', margin: 0 }} onClick={handleSearch}>
+                <button className="primary-btn btn-auto-width" onClick={handleSearch}>
                     Знайти
                 </button>
-                <button className="btn-secondary" onClick={loadAllUsers}>
+                <button className="btn-secondary btn-auto-width" onClick={loadAllUsers}>
                     Показати всіх
+                </button>
+
+                <button className="edit-btn btn-create-user" onClick={openCreateModal}>
+                    ➕ Створити користувача
                 </button>
             </div>
 
@@ -170,9 +245,9 @@ function Admin() {
                 <tbody>
                     {users.map((u) => (
                         <tr key={u.userId}>
-                            <td>{u.userId}</td>
-                            <td>{u.userMail}</td>
-                            <td>{u.userRoles && u.userRoles.length > 0 ? u.userRoles.join(', ') : 'немає ролей'}</td>
+                            <td><b>#{u.userId}</b></td>
+                            <td className="welcome-user-text">{u.userMail}</td>
+                            <td>{u.userRoles && u.userRoles.length > 0 ? u.userRoles.join(', ') : <span className="welcome-guest-text">немає ролей</span>}</td>
                             <td>
                                 <button className="view-btn" onClick={() => viewUserRobots(u.userId)}>Роботи</button>
                                 <button className="edit-btn" onClick={() => openEditModal(u)}>Редагувати</button>
@@ -183,22 +258,23 @@ function Admin() {
                 </tbody>
             </table>
 
-            {isModalOpen && (
-                <div className="modal" style={{ display: 'block' }}>
-                    <div className="modal-content">
+            {isEditModalOpen && (
+                <div className="modal modal-scrollable">
+                    <div className="modal-content modal-content-scrollable">
                         <h3>Редагувати користувача</h3>
                         <input type="text" placeholder="Email" value={editEmail} onChange={(e) => setEditEmail(e.target.value)} />
+                        <input type="text" placeholder="Номер телефону" value={editPhone} onChange={(e) => setEditPhone(e.target.value)} />
 
-                        <label style={{ display: 'block', margin: '10px 0 5px', fontWeight: 'bold' }}>Ролі користувача:</label>
-                        <div style={{ textAlign: 'left', marginLeft: '20px', marginBottom: '15px' }}>
-                            <label>
-                                <input type="checkbox" value="admin" checked={editRoles.includes('admin')} onChange={() => handleRoleChange('admin')} /> admin
-                            </label><br />
-                            <label>
-                                <input type="checkbox" value="user" checked={editRoles.includes('user')} onChange={() => handleRoleChange('user')} /> user
-                            </label><br />
-                            <label>
-                                <input type="checkbox" value="guard" checked={editRoles.includes('guard')} onChange={() => handleRoleChange('guard')} /> guard
+                        <label className="modal-section-label">Ролі користувача:</label>
+                        <div className="modal-checkbox-group">
+                            <label className="checkbox-container">
+                                <input type="checkbox" value="admin" checked={editRoles.includes('admin')} className="checkbox-input" onChange={() => handleEditRoleChange('admin')} /> admin
+                            </label>
+                            <label className="checkbox-container">
+                                <input type="checkbox" value="user" checked={editRoles.includes('user')} className="checkbox-input" onChange={() => handleEditRoleChange('user')} /> user
+                            </label>
+                            <label className="checkbox-container">
+                                <input type="checkbox" value="guard" checked={editRoles.includes('guard')} className="checkbox-input" onChange={() => handleEditRoleChange('guard')} /> guard
                             </label>
                         </div>
 
@@ -206,7 +282,37 @@ function Admin() {
                         <input type="password" placeholder="Підтвердіть пароль" value={editConfirmPassword} onChange={(e) => setEditConfirmPassword(e.target.value)} />
 
                         <button className="primary-btn" onClick={saveUserEdit}>Зберегти</button>
-                        <button className="btn-secondary" style={{ width: '100%', marginTop: '10px' }} onClick={() => setIsModalOpen(false)}>Скасувати</button>
+                        <button className="btn-secondary" onClick={() => setIsEditModalOpen(false)}>Скасувати</button>
+                    </div>
+                </div>
+            )}
+
+            {isCreateModalOpen && (
+                <div className="modal modal-scrollable">
+                    <div className="modal-content modal-content-scrollable">
+                        <h3>Створити нового користувача</h3>
+
+                        <input type="text" placeholder="Email (Логін)" value={createEmail} onChange={(e) => setCreateEmail(e.target.value)} />
+                        <input type="text" placeholder="Номер телефону" value={createPhone} onChange={(e) => setCreatePhone(e.target.value)} />
+
+                        <label className="modal-section-label">Призначити ролі:</label>
+                        <div className="modal-checkbox-group">
+                            <label className="checkbox-container">
+                                <input type="checkbox" value="admin" checked={createRoles.includes('admin')} className="checkbox-input" onChange={() => handleCreateRoleChange('admin')} /> admin
+                            </label>
+                            <label className="checkbox-container">
+                                <input type="checkbox" value="user" checked={createRoles.includes('user')} className="checkbox-input" onChange={() => handleCreateRoleChange('user')} /> user
+                            </label>
+                            <label className="checkbox-container">
+                                <input type="checkbox" value="guard" checked={createRoles.includes('guard')} className="checkbox-input" onChange={() => handleCreateRoleChange('guard')} /> guard
+                            </label>
+                        </div>
+
+                        <input type="password" placeholder="Пароль" value={createPassword} onChange={(e) => setCreatePassword(e.target.value)} />
+                        <input type="password" placeholder="Підтвердіть пароль" value={createConfirmPassword} onChange={(e) => setCreateConfirmPassword(e.target.value)} />
+
+                        <button className="primary-btn" onClick={handleCreateUser}>Створити</button>
+                        <button className="btn-secondary" onClick={() => setIsCreateModalOpen(false)}>Скасувати</button>
                     </div>
                 </div>
             )}
