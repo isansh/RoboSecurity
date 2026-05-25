@@ -6,7 +6,7 @@ namespace RoboSecurity.Services.Interfaces
     {
         List<UserResponse> GetAll();
         UserResponse? GetByMail(string mail);
-        bool PostNew(string mail, string password, string confirmPassword, List<string> roles);
+        bool PostNew(CreateUserRequest create);
         bool DeleteById(int id);
         bool EditUserDetails(ChangeUserRequest change);
     }

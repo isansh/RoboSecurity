@@ -70,7 +70,7 @@ namespace RoboSecurity.Controllers
         [HttpPost]
         public IActionResult PostRobot([FromBody] CreateRobotRequest request)
         {
-            bool robo = robotService.PostNew(request.RoboName, request.RoboIpAdress, request.UserId, request.StreamUrl, request.Status);
+            bool robo = robotService.PostNew(request);
 
             if (!robo)
                 return NotFound();
@@ -95,6 +95,20 @@ namespace RoboSecurity.Controllers
         public IActionResult EditRobot([FromBody] RobotResponse change)
         {
             var result = robotService.EditRobotsDetails(change);
+
+            if (!result)
+            {
+                return NotFound();
+            }
+
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpPut("activate")]
+        public IActionResult ActivateRobot([FromBody] RobotActivationDto request)
+        {
+            var result = robotService.ActivateRobot(request);
 
             if (!result)
             {

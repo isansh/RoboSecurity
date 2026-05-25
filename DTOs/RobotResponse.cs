@@ -10,12 +10,12 @@ namespace RoboSecurity.DTOs
 
         public string RoboName { get; set; }
 
-        public string RoboIpAdress { get; set; }
-
-        public int UserId { get; set; }
-
-        public string StreamUrl { get; set; }
+        public int? UserId { get; set; }
 
         public string Status { get; set; }
+
+        public string? SecretToken { get; set; }
+
+        public DateTime CreatedAt { get; set; }
     }
 }

@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Azure.Core;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using RoboSecurity.DTOs;
 using RoboSecurity.Helpers;
 using RoboSecurity.Models;
@@ -22,10 +24,10 @@ namespace RoboSecurity.Services
                 {
                     RoboId = robo.RoboId,
                     RoboName = robo.RoboName,
-                    RoboIpAdress = robo.RoboIpAdress,
                     UserId = robo.UserId,
-                    StreamUrl = robo.StreamUrl,
                     Status = robo.Status,
+                    CreatedAt = robo.CreatedAt,
+                    SecretToken = null
                 })
                 .ToList();
         }
@@ -44,25 +46,25 @@ namespace RoboSecurity.Services
             {
                 RoboId = robo.RoboId,
                 RoboName = robo.RoboName,
-                RoboIpAdress = robo.RoboIpAdress,
                 UserId = robo.UserId,
-                StreamUrl = robo.StreamUrl,
                 Status = robo.Status,
+                CreatedAt = robo.CreatedAt,
+                SecretToken = robo.SecretToken
             };
         }
 
         public List<RobotResponse> GetByUserId(int userId)
         {
             return dbContext.Robot
-                .Where(robot => robot.UserId == userId)
-                .Select(robot => new RobotResponse
+                .Where(robo => robo.UserId == userId)
+                .Select(robo => new RobotResponse
                 {
-                    RoboId = robot.RoboId,
-                    RoboName = robot.RoboName,
-                    RoboIpAdress = robot.RoboIpAdress,
-                    StreamUrl = robot.StreamUrl,
-                    Status = robot.Status,
-                    UserId = robot.UserId
+                    RoboId = robo.RoboId,
+                    RoboName = robo.RoboName,
+                    UserId = robo.UserId,
+                    Status = robo.Status,
+                    CreatedAt = robo.CreatedAt,
+                    SecretToken = null
                 })
                 .ToList();
         }
@@ -71,44 +73,42 @@ namespace RoboSecurity.Services
         {
             return dbContext.Robot
                 .Where(r => r.RoboId == id)
-                .Select(robot => new RobotResponse
+                .Select(robo => new RobotResponse
                 {
-                    RoboId = robot.RoboId,
-                    RoboName = robot.RoboName,
-                    RoboIpAdress = robot.RoboIpAdress,
-                    StreamUrl = robot.StreamUrl,
-                    Status = robot.Status,
-                    UserId = robot.UserId
+                    RoboId = robo.RoboId,
+                    RoboName = robo.RoboName,
+                    UserId = robo.UserId,
+                    Status = robo.Status,
+                    CreatedAt = robo.CreatedAt,
+                    SecretToken = robo.SecretToken
                 })
                 .FirstOrDefault();
         }
 
-        public bool PostNew(string roboName, string roboIpAdress, int userId, string streamUrl, string status)
+        public bool PostNew(CreateRobotRequest request)
         {
-            var exists = dbContext.User.Any(u => u.UserId == userId);
-
-            if (!exists)
+            if (request == null || !VerifyingRequestHelper.VerifyQuery(request.RoboName))
             {
                 return false;
             }
 
-            if (!VerifyingRequestHelper.VerifyQuery(roboName) ||
-                !VerifyingRequestHelper.VerifyQuery(roboIpAdress) ||
-                !VerifyingRequestHelper.VerifyQuery(streamUrl) ||
-                !VerifyingRequestHelper.VerifyQuery(status))
+            if (request.UserId.HasValue && !dbContext.User.Any(u => u.UserId == request.UserId.Value))
             {
                 return false;
             }
 
-            dbContext.Robot.Add(new RobotsModel
-            {
-                RoboName = roboName,
-                UserId = userId,
-                RoboIpAdress = roboIpAdress,
-                StreamUrl = streamUrl,
-                Status = status,
-            });
+            string generatedToken = "tok_" + Guid.NewGuid().ToString("N");
 
+            var newRobot = new RobotsModel
+            {
+                RoboName = request.RoboName,
+                UserId = request.UserId,
+                SecretToken = generatedToken,
+                Status = "pending_activation",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            dbContext.Robot.Add(newRobot);
             dbContext.SaveChanges();
 
             return true;
@@ -133,30 +133,52 @@ namespace RoboSecurity.Services
         public bool EditRobotsDetails(RobotResponse response)
         {
             var robo = dbContext.Robot.Find(response.RoboId);
+            if (robo == null) return false;
 
-            if (robo == null)
-            {
-                return false;
-            }
-
-            if (!dbContext.User.Any(r => r.UserId == response.UserId))
+            if (response.UserId.HasValue && !dbContext.User.Any(r => r.UserId == response.UserId.Value))
             {
                 return false;
             }
 
             if (!VerifyingRequestHelper.VerifyQuery(response.RoboName) ||
-                !VerifyingRequestHelper.VerifyQuery(response.RoboIpAdress) ||
-                !VerifyingRequestHelper.VerifyQuery(response.StreamUrl) ||
                 !VerifyingRequestHelper.VerifyQuery(response.Status))
             {
                 return false;
             }
 
             robo.RoboName = response.RoboName;
-            robo.RoboIpAdress = response.RoboIpAdress;
             robo.UserId = response.UserId;
-            robo.StreamUrl = response.StreamUrl;
             robo.Status = response.Status;
+
+            if (!string.IsNullOrEmpty(response.SecretToken))
+            {
+                robo.SecretToken = response.SecretToken;
+            }
+
+            dbContext.SaveChanges();
+            return true;
+        }
+
+        public bool ActivateRobot(RobotActivationDto request)
+        {
+            if (request == null || request.RobotId < 0 || string.IsNullOrEmpty(request.SecretToken))
+            {
+                return false;
+            }
+
+            var robot = dbContext.Robot.FirstOrDefault(r => r.RoboId == request.RobotId);
+
+            if (robot == null)
+            {
+                return false;
+            }
+
+            if (robot.SecretToken != request.SecretToken)
+            {
+                return false;
+            }
+
+            robot.Status = "active";
 
             dbContext.SaveChanges();
 

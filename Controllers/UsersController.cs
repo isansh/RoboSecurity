@@ -47,7 +47,7 @@ namespace RoboSecurity.Controllers
         [HttpPost]
         public IActionResult PostUser([FromBody] CreateUserRequest request)
         {
-            bool user = userService.PostNew(request.UserMail, request.Password, request.ConfirmPassword, request.UserRoles);
+            bool user = userService.PostNew(request);
 
             if (!user)
                 return NotFound("Не вдалося додати користувача");
