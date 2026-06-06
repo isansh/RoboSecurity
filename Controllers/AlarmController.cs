@@ -34,7 +34,10 @@ namespace RoboSecurity.Controllers
         public IActionResult Create([FromBody] AlarmRequest request)
         {
             var result = alarmsService.CreateAlarm(request);
-            if (!result) return BadRequest("Не вдалося створити сповіщення");
+            if (!result)
+            {
+                return BadRequest("Не вдалося створити сповіщення");
+            }
 
             return Ok("Тривогу зареєстровано");
         }
@@ -43,7 +46,10 @@ namespace RoboSecurity.Controllers
         public IActionResult Resolve(int id)
         {
             var result = alarmsService.ResolveAlarm(id);
-            if (!result) return NotFound("Аларм з таким ID не знайдено");
+            if (!result)
+            {
+                return NotFound("Аларм з таким ID не знайдено"); 
+            }
 
             return Ok("Тривогу успішно закрито");
         }

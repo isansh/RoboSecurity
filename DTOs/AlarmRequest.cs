@@ -2,7 +2,7 @@
 {
     public class AlarmRequest
     {
-        public int RoboId { get; set; }
+        public string SecretToken { get; set; }
         public string Message { get; set; }
     }
 }

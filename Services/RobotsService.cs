@@ -85,6 +85,27 @@ namespace RoboSecurity.Services
                 .FirstOrDefault();
         }
 
+        public RobotResponse? GetByToken(string token)
+        {
+            var robo = dbContext.Robot
+                .FirstOrDefault(u => u.SecretToken == token);
+
+            if (robo == null)
+            {
+                return null;
+            }
+
+            return new RobotResponse
+            {
+                RoboId = robo.RoboId,
+                RoboName = robo.RoboName,
+                UserId = robo.UserId,
+                Status = robo.Status,
+                CreatedAt = robo.CreatedAt,
+                SecretToken = robo.SecretToken
+            };
+        }
+
         public bool PostNew(CreateRobotRequest request)
         {
             if (request == null || !VerifyingRequestHelper.VerifyQuery(request.RoboName))
@@ -95,6 +116,19 @@ namespace RoboSecurity.Services
             if (request.UserId.HasValue && !dbContext.User.Any(u => u.UserId == request.UserId.Value))
             {
                 return false;
+            }
+
+            if (request.UserId.HasValue)
+            {
+                var hasUserRole =
+                    dbContext.UserRoles.Any(ur =>
+                        ur.UserId == request.UserId.Value &&
+                        ur.Role.RoleName == "user");
+
+                if (!hasUserRole)
+                {
+                    return false;
+                }
             }
 
             string generatedToken = "tok_" + Guid.NewGuid().ToString("N");

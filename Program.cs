@@ -25,10 +25,10 @@ namespace RoboSecurity
             builder.Services.AddDbContext<DBContext>(options =>
             options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            builder.Services.AddControllers();
             builder.Services.AddScoped<IUsersService, UsersService>();
             builder.Services.AddScoped<IRobotsService, RobotsService>();
             builder.Services.AddScoped<IAlarmsService, AlarmsService>();
+            builder.Services.AddSingleton<IRobotConnectionService, RobotConnectionService>();
 
             builder.Services.AddAuthentication(options =>
             {
