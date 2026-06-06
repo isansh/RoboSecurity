@@ -10,6 +10,14 @@ function Register() {
     const navigate = useNavigate();
 
     async function handleRegister() {
+        if (phone && !/^\+380\d{9}$/.test(phone)) {
+            return alert("Введіть номер у форматі +380XXXXXXXXX");
+        }
+
+        if (password !== confPassword) {
+            return alert("Паролі не співпадають");
+        }
+
         const regData = {
             UserMail: email,
             PhoneNumber: phone,
@@ -18,12 +26,24 @@ function Register() {
             UserRoles: ["user"]
         };
 
-        const response = await fetch('https://localhost:7193/Users', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(regData)
-        });
-        if (response.ok) { alert("Успіх!"); navigate('/login'); }
+        try {
+            const response = await fetch('https://localhost:7193/Users', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(regData)
+            });
+
+            if (response.ok) {
+                alert("Успіх!");
+                navigate('/login');
+            } else {
+                const errorText = await response.text();
+                alert(errorText || "Не вдалося створити акаунт");
+            }
+        }
+        catch {
+            alert("Помилка з'єднання із сервером");
+        }
     }
 
     return (
@@ -38,7 +58,7 @@ function Register() {
                 />
                 <input
                     type="tel"
-                    placeholder="Ваш номер телефона"
+                    placeholder="+380XXXXXXXXX"
                     value={phone}
                     onChange={(e) => setPhoneNumber(e.target.value)}
                 />

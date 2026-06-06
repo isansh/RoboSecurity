@@ -10,7 +10,6 @@ function Admin() {
     const [users, setUsers] = useState([]);
     const [searchEmail, setSearchEmail] = useState('');
 
-    // Стан для модалки РЕДАГУВАННЯ
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editUserId, setEditUserId] = useState('');
     const [editEmail, setEditEmail] = useState('');
@@ -19,7 +18,6 @@ function Admin() {
     const [editConfirmPassword, setEditConfirmPassword] = useState('');
     const [editRoles, setEditRoles] = useState([]);
 
-    // Стан для модалки СТВОРЕННЯ
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [createEmail, setCreateEmail] = useState('');
     const [createPhone, setCreatePhone] = useState('');
@@ -85,7 +83,6 @@ function Admin() {
         }
     }
 
-    // --- ЛОГІКА РЕДАГУВАННЯ ---
     function openEditModal(user) {
         setEditUserId(user.userId);
         setEditEmail(user.userMail);
@@ -112,7 +109,10 @@ function Admin() {
             return alert("Паролі не співпадають!");
         }
 
-        // Форматуємо об'єкт під вимоги C# API (Паскаль-кейс для сумісності)
+        if (editPhone && !/^\+380\d{9}$/.test(editPhone)) {
+            return alert("Введіть номер у форматі +380XXXXXXXXX");
+        }
+
         const data = {
             UserId: parseInt(editUserId),
             UserMail: editEmail,
@@ -144,7 +144,6 @@ function Admin() {
         }
     }
 
-    // --- ЛОГІКА СТВОРЕННЯ (РЕЄСТРАЦІЇ З АДМІНКИ) ---
     function openCreateModal() {
         setCreateEmail('');
         setCreatePhone('');
@@ -173,17 +172,19 @@ function Admin() {
             return alert("Паролі не співпадають!");
         }
 
-        // Повністю копіюємо структуру успішного об'єкта з Register.jsx
+        if (createPhone && !/^\+380\d{9}$/.test(createPhone)) {
+            return alert("Введіть номер у форматі +380XXXXXXXXX");
+        }
+
         const regData = {
             UserMail: createEmail,
             PhoneNumber: createPhone,
             Password: createPassword,
             ConfirmPassword: createConfirmPassword,
-            UserRoles: createRoles // Передаємо масив вибраних адміном ролей
+            UserRoles: createRoles
         };
 
         try {
-            // URL виправлено на базовий, як у файлі Register.jsx
             const response = await fetch(apiBase, {
                 method: 'POST',
                 headers: {
@@ -198,7 +199,8 @@ function Admin() {
                 setIsCreateModalOpen(false);
                 loadAllUsers();
             } else {
-                alert("Не вдалося створити користувача. Перевірте дані.");
+                const serverError = await response.text();
+                alert(serverError || "Не вдалося створити користувача.");
             }
         } catch {
             alert("Помилка мережі при створенні користувача");
@@ -249,7 +251,15 @@ function Admin() {
                             <td className="welcome-user-text">{u.userMail}</td>
                             <td>{u.userRoles && u.userRoles.length > 0 ? u.userRoles.join(', ') : <span className="welcome-guest-text">немає ролей</span>}</td>
                             <td>
-                                <button className="view-btn" onClick={() => viewUserRobots(u.userId)}>Роботи</button>
+                                <button
+                                    className="view-btn"
+                                    onClick={() => viewUserRobots(u.userId)}
+                                    style={{
+                                        visibility: u.userRoles?.includes('user') ? 'visible' : 'hidden'
+                                    }}
+                                >
+                                    Роботи
+                                </button>
                                 <button className="edit-btn" onClick={() => openEditModal(u)}>Редагувати</button>
                                 <button className="del-btn" onClick={() => handleDeleteUser(u.userId)}>Видалити</button>
                             </td>
@@ -291,10 +301,8 @@ function Admin() {
                 <div className="modal modal-scrollable">
                     <div className="modal-content modal-content-scrollable">
                         <h3>Створити нового користувача</h3>
-
                         <input type="text" placeholder="Email (Логін)" value={createEmail} onChange={(e) => setCreateEmail(e.target.value)} />
-                        <input type="text" placeholder="Номер телефону" value={createPhone} onChange={(e) => setCreatePhone(e.target.value)} />
-
+                        <input type="tel" placeholder="+380XXXXXXXXX" pattern="^\+380\d{9}$" value={createPhone} onChange={(e) => setCreatePhone(e.target.value)} />
                         <label className="modal-section-label">Призначити ролі:</label>
                         <div className="modal-checkbox-group">
                             <label className="checkbox-container">

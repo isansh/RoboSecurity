@@ -215,8 +215,10 @@ input, select {
     padding: 25px;
     border-radius: 24px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
-    width: fit-content;
     margin: 20px auto;
+    width: 100%;
+    max-width: 500px;
+    box-sizing: border-box;
 }
 
 .joystick-grid {
@@ -443,7 +445,6 @@ th {
         color: #4682b4;
     }
 
-/* Модифікації для пошукової секції та кнопки створення */
 .search-input {
     margin: 0 !important;
     width: 300px !important;
@@ -461,19 +462,16 @@ th {
     border-radius: 8px !important;
 }
 
-/* Дозволяємо підкладці модалки скролитись, якщо вікно не вміщається */
 .modal-scrollable {
     overflow-y: auto !important;
 }
 
-/* Налаштування самого контенту модалки для прокрутки */
 .modal-content-scrollable {
     margin: 5% auto !important;
     max-height: 90vh !important;
     overflow-y: auto !important;
 }
 
-/* Заголовки розділів всередині модального вікна */
 .modal-section-label {
     display: block !important;
     margin: 15px 0 5px !important;
@@ -481,14 +479,12 @@ th {
     text-align: left !important;
 }
 
-/* Контейнер для списку чекбоксів */
 .modal-checkbox-group {
     text-align: left !important;
     margin-left: 5px !important;
     margin-bottom: 15px !important;
 }
 
-/* Виправлення чекбоксів: ставимо в один рядок з текстом */
 .checkbox-container {
     display: flex !important;
     align-items: center !important;
@@ -499,9 +495,37 @@ th {
     font-weight: normal !important;
 }
 
-/* Скидаємо width: 100% для маленьких квадратиків */
 .checkbox-input {
     width: auto !important;
     margin: 0 !important;
     transform: scale(1.2) !important;
 }
+
+.watchdog-panel {
+    margin-top: 15px;
+    width: 100%;
+    text-align: center;
+}
+
+.watchdog-btn {
+    width: 100% !important;
+    height: auto !important;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 15px;
+}
+
+.watchdog-inactive {
+    background-color: #b0e0e6;
+    color: #4682b4;
+}
+
+.watchdog-active {
+    background-color: #ffe4e1;
+    color: #db7093;
+}
+
+    .watchdog-active:active:not(:disabled) {
+        background-color: #ffd1dc;
+    }

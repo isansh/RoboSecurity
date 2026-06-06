@@ -20,6 +20,8 @@ const RobotControl = () => {
     const [editName, setEditName] = useState('');
     const [editStatus, setEditStatus] = useState('');
 
+    const isWatchdogActive = robot && robot.status === 'watchdog';
+
     const refreshData = async (id) => {
         try {
             const response = await fetch(`${apiBase}/id/${id}`, {
@@ -83,7 +85,7 @@ const RobotControl = () => {
             roboId: currentRobotId,
             roboName: editName,
             status: editStatus,
-            userId: robot.userId
+            userId: robot.userId,
         };
 
         try {
@@ -135,16 +137,61 @@ const RobotControl = () => {
 
         console.log(`Надсилаємо команду: ${action} для робота ${currentRobotId}`);
         try {
-            await fetch(`${apiBase}/id/${currentRobotId}/control`, {
+            const urlWithQuery = `${apiBase}/id/${currentRobotId}/control?action=${action}`;
+
+            await fetch(urlWithQuery, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ action: action })
+                }
             });
         } catch (error) {
             console.error("Помилка зв'язку з сервером при керуванні:", error);
+        }
+    };
+
+    const toggleWatchdogMode = async () => {
+        if (robot.status === 'pending_activation') return;
+
+        const nextStatusInDb = isWatchdogActive ? 'active' : 'watchdog';
+        const actionCommand = isWatchdogActive ? 'watchdog-stop' : 'watchdog';
+
+        const updateData = {
+            roboId: currentRobotId,
+            roboName: robot.roboName,
+            status: nextStatusInDb,
+            userId: robot.userId,
+        };
+
+        try {
+            const editResponse = await fetch(`${apiBase}/edit`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updateData)
+            });
+
+            if (editResponse.ok) {
+                console.log(`Статус в базі успішно змінено на: ${nextStatusInDb}`);
+
+                const urlWithQuery = `${apiBase}/id/${currentRobotId}/control?action=${actionCommand}`;
+                await fetch(urlWithQuery, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                refreshData(currentRobotId);
+            } else {
+                alert("Помилка оновлення статусу охорони на сервері.");
+            }
+        } catch (error) {
+            console.error("Помилка при перемиканні охорони:", error);
         }
     };
 
@@ -152,9 +199,10 @@ const RobotControl = () => {
     if (!robot) return <div className="container"><h2 className="welcome-guest-text">Робора не знайдено</h2></div>;
 
     const qrConfigString = JSON.stringify({
-        server_url: "https://localhost:7193",
+        server_url: `https://192.168.0.105:7193`,
         robot_id: robot.roboId,
-        secret_token: robot.secretToken
+        secret_token: robot.secretToken,
+        user_auth_token: token
     });
 
     return (
@@ -185,12 +233,24 @@ const RobotControl = () => {
                             )}
                         </div>
                     ) : (
-                        <img
-                            id="videoStream"
-                            className="video-feed"
-                            src={`${apiBase}/id/${robot.roboId}/stream`}
-                            alt="Очікування сигналу з робота..."
-                        />
+                            <div className="video-stream-container">
+                                {robot.status === 'active' || robot.status === 'watchdog' ? (
+                                    <img
+                                        src={`${apiBase}/id/${robot.roboId}/video`}
+                                        alt="Robot Live Video Feed"
+                                        className="robot-video-feed"
+                                        onError={(e) => {
+                                            e.target.onerror = null;
+                                            e.target.style.display = 'none';
+                                            console.log("Відеопотік з C# наразі недоступний");
+                                        }}
+                                    />
+                                ) : (
+                                    <div className="video-placeholder">
+                                        <p>Чекаємо на активацію робота через QR-код...</p>
+                                    </div>
+                                )}
+                            </div>
                     )}
                 </div>
 
@@ -199,6 +259,19 @@ const RobotControl = () => {
                         <h2>🤖 Робот: <span className="welcome-user-text">{robot.roboName}</span></h2>
                         <p><strong>Статус:</strong> <span className="welcome-user-text">{robot.status}</span></p>
                         <p><strong>Створено:</strong> <span className="welcome-guest-text">{new Date(robot.createdAt).toLocaleDateString()}</span></p>
+                    </div>
+
+                    <div className="watchdog-panel">
+                        <button
+                            className={`control-btn watchdog-btn ${isWatchdogActive ? 'watchdog-active' : 'watchdog-inactive'
+                                }`}
+                            disabled={robot.status === 'pending_activation'}
+                            onClick={toggleWatchdogMode}
+                        >
+                            {isWatchdogActive
+                                ? '🚨 Охорона АКТИВНА (Вимкнути)'
+                                : '🛡️ Увімкнути охорону'}
+                        </button>
                     </div>
 
                     <div className={robot.status === 'pending_activation' ? "controls-container welcome-guest-text" : "controls-container"}>
@@ -241,14 +314,13 @@ const RobotControl = () => {
                                 <button
                                     className="control-btn tilt-btn"
                                     disabled={robot.status === 'pending_activation'}
-                                    onMouseDown={() => sendRobotCommand('cam-up')}
-                                    onMouseUp={() => sendRobotCommand('stop')}
+                                    onClick={() => sendRobotCommand('cam-up')}
                                 >🔼</button>
+
                                 <button
                                     className="control-btn tilt-btn"
                                     disabled={robot.status === 'pending_activation'}
-                                    onMouseDown={() => sendRobotCommand('cam-down')}
-                                    onMouseUp={() => sendRobotCommand('stop')}
+                                    onClick={() => sendRobotCommand('cam-down')}
                                 >🔽</button>
                             </div>
                         </div>
@@ -267,9 +339,6 @@ const RobotControl = () => {
                         <h3>Редагувати робота</h3>
                         <label>Назва:</label>
                         <input type="text" value={editName} onChange={(e) => setEditName(e.target.value)} />
-
-                        <label>Статус:</label>
-                        <input type="text" value={editStatus} onChange={(e) => setEditStatus(e.target.value)} />
 
                         <div>
                             <button className="primary-btn" onClick={saveEdit}>Зберегти</button>
