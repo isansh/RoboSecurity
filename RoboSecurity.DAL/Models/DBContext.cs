@@ -1,0 +1,30 @@
+﻿using Microsoft.EntityFrameworkCore;
+
+namespace RoboSecurity.DAL.Models
+{
+    public class DBContext : DbContext
+    {
+        public DBContext(DbContextOptions<DBContext> options)
+        : base(options)
+        {
+        }
+
+        public DbSet<UsersModel> User { get; set; }
+
+        public DbSet<RolesModel> Role { get; set; }
+
+        public DbSet<RobotsModel> Robot { get; set; }
+
+        public DbSet<UserRolesModel> UserRoles {  get; set; }
+
+        public DbSet<AlarmModel> Alarms { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<UserRolesModel>()
+                .HasKey(ur => new { ur.UserId, ur.RoleId });
+        }
+    }
+}

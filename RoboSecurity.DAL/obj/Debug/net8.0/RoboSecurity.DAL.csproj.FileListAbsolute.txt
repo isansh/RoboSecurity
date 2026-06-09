@@ -1,0 +1,13 @@
+D:\diplom\RoboSecurity\RoboSecurity.DAL\bin\Debug\net8.0\RoboSecurity.DAL.deps.json
+D:\diplom\RoboSecurity\RoboSecurity.DAL\bin\Debug\net8.0\RoboSecurity.DAL.dll
+D:\diplom\RoboSecurity\RoboSecurity.DAL\bin\Debug\net8.0\RoboSecurity.DAL.pdb
+D:\diplom\RoboSecurity\RoboSecurity.DAL\obj\Debug\net8.0\RoboSecurity.DAL.csproj.AssemblyReference.cache
+D:\diplom\RoboSecurity\RoboSecurity.DAL\obj\Debug\net8.0\RoboSecurity.DAL.GeneratedMSBuildEditorConfig.editorconfig
+D:\diplom\RoboSecurity\RoboSecurity.DAL\obj\Debug\net8.0\RoboSecurity.DAL.AssemblyInfoInputs.cache
+D:\diplom\RoboSecurity\RoboSecurity.DAL\obj\Debug\net8.0\RoboSecurity.DAL.AssemblyInfo.cs
+D:\diplom\RoboSecurity\RoboSecurity.DAL\obj\Debug\net8.0\RoboSecurity.DAL.csproj.CoreCompileInputs.cache
+D:\diplom\RoboSecurity\RoboSecurity.DAL\obj\Debug\net8.0\RoboSecurity.DAL.sourcelink.json
+D:\diplom\RoboSecurity\RoboSecurity.DAL\obj\Debug\net8.0\RoboSecurity.DAL.dll
+D:\diplom\RoboSecurity\RoboSecurity.DAL\obj\Debug\net8.0\refint\RoboSecurity.DAL.dll
+D:\diplom\RoboSecurity\RoboSecurity.DAL\obj\Debug\net8.0\RoboSecurity.DAL.pdb
+D:\diplom\RoboSecurity\RoboSecurity.DAL\obj\Debug\net8.0\ref\RoboSecurity.DAL.dll
