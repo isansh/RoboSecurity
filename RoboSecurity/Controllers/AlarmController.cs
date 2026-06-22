@@ -35,26 +35,15 @@ namespace RoboSecurity.Controllers
 
         [HttpPost("upload")]
         [AllowAnonymous]
-        public async Task<IActionResult> Create([FromForm] AlarmRequest request, IFormFile file)
+        public async Task<IActionResult> Create([FromBody] AlarmRequest request)
         {
-            if (file == null || file.Length == 0) return BadRequest("Файл відсутній");
+            if (request == null || string.IsNullOrEmpty(request.ImageBase64))
+                return BadRequest("Некоректні дані запиту або відсутній Base64-код картинки");
 
-            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "alarms");
-            if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
+            var result = await alarmsService.CreateAlarm(request);
 
-            var uniqueFileName = $"{Guid.NewGuid()}_{file.FileName}";
-            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+            if (!result) return BadRequest("Не вдалося створити тривогу (робот не знайдений або помилка запису)");
 
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
-
-            var relativeUrlPath = $"/uploads/alarms/{uniqueFileName}";
-
-            var result = await alarmsService.CreateAlarm(request, relativeUrlPath);
-
-            if (!result) return BadRequest("Не вдалося створити тривогу");
             return Ok();
         }
 

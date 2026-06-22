@@ -17,6 +17,8 @@ namespace RoboSecurity.BLL.Services
         public async Task<List<AlarmResponse>> GetAllAlarms()
         {
             return await dbContext.Alarms
+                .Include(a => a.Robot)
+                .ThenInclude(r => r.User)
                 .OrderByDescending(a => a.Timestamp)
                 .Select(a => MapToAlarmResponse(a))
                 .ToListAsync();
@@ -25,6 +27,8 @@ namespace RoboSecurity.BLL.Services
         public async Task<List<AlarmResponse>> GetUnresolvedAlarms()
         {
             return await dbContext.Alarms
+                .Include(a => a.Robot)
+                .ThenInclude(r => r.User)
                 .Where(a => !a.IsResolved)
                 .OrderByDescending(a => a.Timestamp)
                 .Select(a => MapToAlarmResponse(a))
@@ -39,18 +43,20 @@ namespace RoboSecurity.BLL.Services
             }
 
             return await dbContext.Alarms
+                .Include(a => a.Robot)
+                .ThenInclude(r => r.User)
                 .Where(a => a.Timestamp >= fromDate && a.Timestamp <= toDate)
                 .OrderByDescending(a => a.Timestamp)
                 .Select(a => MapToAlarmResponse(a))
                 .ToListAsync();
         }
 
-        public async Task<bool> CreateAlarm(AlarmRequest request, string relativePath)
+        public async Task<bool> CreateAlarm(AlarmRequest request)
         {
             var robot = await dbContext.Robot.FirstOrDefaultAsync(r => r.Token == request.SecretToken);
             if (robot == null) return false;
 
-            var cooldownPeriod = DateTime.UtcNow.AddSeconds(-3000);
+            var cooldownPeriod = DateTime.UtcNow.AddSeconds(-300);
             bool isSpam = await dbContext.Alarms.AnyAsync(a =>
                 a.RoboId == robot.RoboId &&
                 a.Timestamp > cooldownPeriod &&
@@ -59,17 +65,44 @@ namespace RoboSecurity.BLL.Services
 
             if (isSpam) return true;
 
+            string relativeUrlPath = string.Empty;
+            if (!string.IsNullOrEmpty(request.ImageBase64))
+            {
+                try
+                {
+                    byte[] imageBytes = Convert.FromBase64String(request.ImageBase64);
+
+                    string alarmsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "alarms");
+
+                    if (!Directory.Exists(alarmsFolder))
+                        Directory.CreateDirectory(alarmsFolder);
+
+                    string uniqueFileName = $"{Guid.NewGuid()}_{request.ImageName}";
+                    string filePath = Path.Combine(alarmsFolder, uniqueFileName);
+
+                    await System.IO.File.WriteAllBytesAsync(filePath, imageBytes);
+
+                    relativeUrlPath = $"/uploads/alarms/{uniqueFileName}";
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[Сервіс Охорони] Помилка обробки файлу: {ex.Message}");
+                    return false;
+                }
+            }
+
             var newAlarm = new AlarmModel
             {
                 RoboId = robot.RoboId,
                 Percent = request.Percent,
                 Timestamp = DateTime.UtcNow,
                 IsResolved = false,
-                SnapshotPath = relativePath
+                SnapshotPath = relativeUrlPath
             };
 
             dbContext.Alarms.Add(newAlarm);
             await dbContext.SaveChangesAsync();
+
             return true;
         }
 

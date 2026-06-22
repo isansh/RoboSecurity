@@ -7,7 +7,7 @@ namespace RoboSecurity.BLL.Services.Interfaces
     {
         Task<List<AlarmResponse>> GetAllAlarms();
         Task<List<AlarmResponse>> GetUnresolvedAlarms();
-        Task<bool> CreateAlarm(AlarmRequest request, string relativePath);
+        Task<bool> CreateAlarm(AlarmRequest request);
         Task<bool> ResolveAlarm(int alarmId);
         Task<List<AlarmResponse>> GetAlarmsByDate(DateTime fromDate, DateTime toDate);
     }

@@ -21,4 +21,8 @@
     <ProjectReference Include="..\RoboSecurity.BLL\RoboSecurity.BLL.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="wwwroot\uploads\alarms\" />
+  </ItemGroup>
+
 </Project>

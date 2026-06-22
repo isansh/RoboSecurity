@@ -106,6 +106,12 @@ namespace RoboSecurity.BLL.Services
             var robo = await dbContext.Robot.FindAsync(id);
             if (robo == null) return false;
 
+            var linkedAlarms = await dbContext.Alarms.Where(a => a.RoboId == id).ToListAsync();
+            if (linkedAlarms.Any())
+            {
+                dbContext.Alarms.RemoveRange(linkedAlarms);
+            }
+
             dbContext.Robot.Remove(robo);
             await dbContext.SaveChangesAsync();
             return true;
@@ -128,6 +134,20 @@ namespace RoboSecurity.BLL.Services
 
             robo.RoboName = response.RoboName;
 
+            if (VerifyingRequestHelper.VerifyQuery(response.Status))
+            {
+                string incomingStatus = response.Status.Trim().ToLower();
+
+                if (incomingStatus == "watchdog" || incomingStatus == "active" || incomingStatus == "offline")
+                {
+                    robo.Status = incomingStatus;
+                }
+            }
+            else
+            {
+                return false;
+            }
+
             await dbContext.SaveChangesAsync();
             return true;
         }
@@ -141,7 +161,7 @@ namespace RoboSecurity.BLL.Services
                 UserId = robo.UserId,
                 Status = robo.Status,
                 CreatedAt = robo.CreatedAt,
-                SecretToken = includeToken ? robo.Token : null
+                Token = includeToken ? robo.Token : null
             };
         }
     }

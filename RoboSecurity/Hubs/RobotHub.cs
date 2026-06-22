@@ -6,12 +6,11 @@ namespace RoboSecurity.Hubs
 {
     public class RobotHub : Hub
     {
-        private readonly DBContext dbContext;
-        private static readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
+        private readonly IServiceScopeFactory _scopeFactory;
 
-        public RobotHub(DBContext dbContext)
+        public RobotHub(IServiceScopeFactory scopeFactory)
         {
-            this.dbContext = dbContext;
+            _scopeFactory = scopeFactory;
         }
 
         public async Task RegisterRobot(string secretToken)
@@ -22,37 +21,44 @@ namespace RoboSecurity.Hubs
                 return;
             }
 
-            await _semaphore.WaitAsync();
-            try
+            using (var scope = _scopeFactory.CreateScope())
             {
-                var robot = await dbContext.Robot.FirstOrDefaultAsync(r => r.Token == secretToken);
+                var dbContext = scope.ServiceProvider.GetRequiredService<DBContext>();
 
-                if (robot == null)
+                try
                 {
-                    Console.WriteLine($"[SignalR Hub] Спроба підключення з невірним токеном.");
-                    Context.Abort();
-                    return;
+                    var robot = await dbContext.Robot.FirstOrDefaultAsync(r => r.Token == secretToken);
+
+                    if (robot == null)
+                    {
+                        Console.WriteLine($"[SignalR Hub] Спроба підключення з невірним токеном.");
+                        Context.Abort();
+                        return;
+                    }
+
+                    string currentStatus = robot.Status?.Trim().ToLower() ?? "";
+
+                    Context.Items["RobotId"] = robot.RoboId;
+                    await Groups.AddToGroupAsync(Context.ConnectionId, $"Robot_{robot.RoboId}");
+
+                    if (currentStatus == "watchdog")
+                    {
+                        Console.WriteLine($"[SignalR Hub] Робот {robot.RoboName} (ID: {robot.RoboId}) підключився. Режим охорони [watchdog] АКТИВНИЙ.");
+                    }
+                    else
+                    {
+                        robot.Status = "active";
+                        await dbContext.SaveChangesAsync();
+                        Console.WriteLine($"[SignalR Hub] Робот {robot.RoboName} (ID: {robot.RoboId}) увійшов в мережу. Статус: active");
+                    }
+
+                    await Clients.Caller.SendAsync("RegistrationConfirmed");
                 }
-
-                Context.Items["RobotId"] = robot.RoboId;
-
-                await Groups.AddToGroupAsync(Context.ConnectionId, $"Robot_{robot.RoboId}");
-
-                robot.Status = "active";
-                await dbContext.SaveChangesAsync();
-
-                Console.WriteLine($"[SignalR Hub] Робот {robot.RoboName} (ID: {robot.RoboId}) успішно підключився.");
-
-                await Clients.Caller.SendAsync("RegistrationConfirmed");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[SignalR Hub] Помилка при реєстрації робота: {ex.Message}");
-                Context.Abort();
-            }
-            finally
-            {
-                _semaphore.Release();
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[SignalR Hub] Помилка при реєстрації робота: {ex.Message}");
+                    Context.Abort();
+                }
             }
         }
 
@@ -66,29 +72,39 @@ namespace RoboSecurity.Hubs
 
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
-            await _semaphore.WaitAsync();
-            try
+            if (Context.Items.TryGetValue("RobotId", out var robotIdObj) && robotIdObj is int robotId)
             {
-                if (Context.Items.TryGetValue("RobotId", out var robotIdObj) && robotIdObj is int robotId)
+                using (var scope = _scopeFactory.CreateScope())
                 {
-                    var robot = await dbContext.Robot.FindAsync(robotId);
-                    if (robot != null && robot.Status == "active")
+                    var dbContext = scope.ServiceProvider.GetRequiredService<DBContext>();
+
+                    try
                     {
-                        robot.Status = "offline";
-                        await dbContext.SaveChangesAsync();
-                        Console.WriteLine($"[SignalR Hub] Робот ID {robotId} відключився.");
+                        var robot = await dbContext.Robot.FirstOrDefaultAsync(r => r.RoboId == robotId);
+
+                        if (robot != null)
+                        {
+                            string currentStatus = robot.Status?.Trim().ToLower() ?? "";
+
+                            if (currentStatus == "watchdog")
+                            {
+                                Console.WriteLine($"[SignalR Hub] РОБОТ В ОХОРОНІ ОФЛАЙН! Статус залишається watchdog.");
+                            }
+                            else
+                            {
+                                Console.WriteLine($"[SignalR Hub] Робот {robot.RoboName} відключився. Змінюємо статус на offline.");
+                                robot.Status = "offline";
+                                await dbContext.SaveChangesAsync();
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[SignalR Hub] Помилка при відключенні робота: {ex.Message}");
                     }
                 }
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[SignalR Hub] Помилка при відключенні робота: {ex.Message}");
-            }
-            finally
-            {
-                _semaphore.Release();
-                await base.OnDisconnectedAsync(exception);
-            }
+            await base.OnDisconnectedAsync(exception);
         }
 
         public async Task StartWatchingRobot(int robotId)
@@ -97,7 +113,6 @@ namespace RoboSecurity.Hubs
             {
                 throw new HubException("Unauthorized");
             }
-
             await Groups.AddToGroupAsync(Context.ConnectionId, $"Watchers_{robotId}");
         }
 
@@ -107,7 +122,6 @@ namespace RoboSecurity.Hubs
             {
                 throw new HubException("Unauthorized");
             }
-
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"Watchers_{robotId}");
         }
     }

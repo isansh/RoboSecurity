@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("RoboSecurity.DAL")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+00a262acabf0dd560d4eb5349026efc97849664f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+139a9c0efb4b7bae4efe6c2ad89589bf9688f310")]
 [assembly: System.Reflection.AssemblyProductAttribute("RoboSecurity.DAL")]
 [assembly: System.Reflection.AssemblyTitleAttribute("RoboSecurity.DAL")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -93,7 +93,7 @@ function Guard() {
     function renderAlarmMessage(message) {
         if (!message) return "⚠️ Порушення периметру";
 
-        return `🚨 Виявлено людину (Впевненість ШІ: ${message}%)`;
+        return `🚨 Виявлено людину (Впевненість: ${message}%)`;
     }
 
     function getImageUrl(alarm) {

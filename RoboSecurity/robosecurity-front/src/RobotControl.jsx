@@ -28,6 +28,8 @@ const RobotControl = () => {
 
     const hubConnectionRef = useRef(null);
 
+    const lastSentActionRef = useRef('stop');
+
     const isWatchdogActive = robot && robot.status === 'watchdog';
     const [isLightOn, setIsLightOn] = useState(false);
 
@@ -136,18 +138,27 @@ const RobotControl = () => {
     }, [robot, currentRobotId]);
 
     const sendRobotCommand = async (action) => {
-        if (robot.status === 'pending_activation') return;
+        if (!robot || robot.status === 'pending_activation') return;
+
+        const isCameraOrLight = ['cam-up', 'cam-down', 'lights-on', 'lights-off'].includes(action);
+
+        if (!isCameraOrLight && action === lastSentActionRef.current) {
+            return;
+        }
+
+        lastSentActionRef.current = action;
+        console.log(`Фронтенд відправляє унікальну команду: ${action}`);
 
         try {
-            fetch(`${API_CONFIG.BASE_URL}/id/${currentRobotId}/control?action=${action}`, {
+            await fetch(`${API_CONFIG.BASE_URL}/id/${currentRobotId}/control?action=${action}`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
         } catch (error) {
             console.error("Помилка відправки команди:", error);
+            lastSentActionRef.current = '';
         }
     };
-
 
     const handleButtonPress = (action) => {
         sendRobotCommand(action);
@@ -246,7 +257,6 @@ const RobotControl = () => {
     const handleLightClick = () => {
         const nextState = !isLightOn;
         setIsLightOn(nextState);
-
         sendRobotCommand(nextState ? 'lights-on' : 'lights-off');
     };
 
@@ -318,7 +328,7 @@ const RobotControl = () => {
                         </button>
                     </div>
 
-                    <div className={robot.status === 'pending_activation' ? "controls-container welcome-guest-text" : "controls-container"}>
+                    <div className="controls-container">
                         <h3>Пульт керування</h3>
                         {robot.status === 'pending_activation' && <p>⚠️ Доступно після активації</p>}
 
